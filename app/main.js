@@ -2476,6 +2476,8 @@
 	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               CNY2018
 	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               =======
 	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               Happy Chinese New Year!
+	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
 	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               (Shaun A. Noordin || shaunanoordin.com || 20180211)
 	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ********************************************************************************
 	                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                */
@@ -2489,6 +2491,12 @@
 	    var _this = _possibleConstructorReturn(this, (CNY2018.__proto__ || Object.getPrototypeOf(CNY2018)).call(this));
 
 	    _this.init = _this.init.bind(_this);
+	    _this.run_start = _this.run_start.bind(_this);
+	    _this.run_action = _this.run_action.bind(_this);
+
+	    _this.playIntroComic = _this.playIntroComic.bind(_this);
+	    _this.finishIntroComic = _this.finishIntroComic.bind(_this);
+	    _this.startGame = _this.startGame.bind(_this);
 	    return _this;
 	  }
 
@@ -2504,16 +2512,64 @@
 
 	      //Images
 	      //--------------------------------
+	      avo.assets.images.actor = new _utility.ImageAsset("assets/cny2018/actor.png");
+	      avo.assets.images.comicIntro1 = new _utility.ImageAsset("assets/cny2018/comic-intro-1.png");
 	      //--------------------------------
 
 	      //Animations
 	      //--------------------------------
+	      var STEPS_PER_SECOND = AVO.FRAMES_PER_SECOND / 10;
+	      avo.animationSets = {
+	        actor: {
+	          rule: AVO.ANIMATION_RULE_DIRECTIONAL,
+	          tileWidth: 64,
+	          tileHeight: 64,
+	          tileOffsetX: 0,
+	          tileOffsetY: -24, //-16,
+	          actions: {
+	            idle: {
+	              loop: true,
+	              steps: [{ row: 0, duration: 1 }]
+	            },
+	            moving: {
+	              loop: true,
+	              steps: [{ row: 1, duration: STEPS_PER_SECOND }, { row: 2, duration: STEPS_PER_SECOND * 2 }, { row: 1, duration: STEPS_PER_SECOND }, { row: 3, duration: STEPS_PER_SECOND * 2 }]
+	            }
+	          }
+	        }
+	      };
 	      //--------------------------------
 
 	      //Rooms
 	      //--------------------------------
 	      //--------------------------------
 	    }
+	  }, {
+	    key: "run_start",
+	    value: function run_start() {
+	      var avo = this.avo;
+
+	      if (avo.pointer.state === AVO.INPUT_ACTIVE || avo.keys[AVO.KEY_CODES.UP].state === AVO.INPUT_ACTIVE || avo.keys[AVO.KEY_CODES.DOWN].state === AVO.INPUT_ACTIVE || avo.keys[AVO.KEY_CODES.LEFT].state === AVO.INPUT_ACTIVE || avo.keys[AVO.KEY_CODES.RIGHT].state === AVO.INPUT_ACTIVE || avo.keys[AVO.KEY_CODES.SPACE].state === AVO.INPUT_ACTIVE || avo.keys[AVO.KEY_CODES.ENTER].state === AVO.INPUT_ACTIVE) {
+	        avo.changeState(AVO.STATE_COMIC, this.playIntroComic);
+	      }
+	    }
+	  }, {
+	    key: "playIntroComic",
+	    value: function playIntroComic() {
+	      var avo = this.avo;
+	      avo.comicStrip = new _comicStrip.ComicStrip("comic_1", [avo.assets.images.comicIntro1], this.finishIntroComic);
+	    }
+	  }, {
+	    key: "finishIntroComic",
+	    value: function finishIntroComic() {
+	      this.avo.changeState(AVO.STATE_ACTION, this.startGame);
+	    }
+	  }, {
+	    key: "startGame",
+	    value: function startGame() {}
+	  }, {
+	    key: "run_action",
+	    value: function run_action() {}
 	  }]);
 
 	  return CNY2018;
