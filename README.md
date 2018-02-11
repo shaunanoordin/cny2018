@@ -1,4 +1,4 @@
-# Chinese New Year 2018 - Year of the Rooster Card & Game
+# Chinese New Year 2018 - Year of the Dog Card & Game
 
 This is a combination Chinese New Year greeting card and mini video game to celebrate the Year of the Dog. Gong Xi Fa Cai, everyone!
 
