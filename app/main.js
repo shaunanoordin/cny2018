@@ -2538,6 +2538,43 @@
 	          }
 	        }
 	      };
+
+	      //Process Animations; expand steps to many frames per steps.
+	      for (var animationTitle in avo.animationSets) {
+	        var animationSet = avo.animationSets[animationTitle];
+	        for (var animationName in animationSet.actions) {
+	          var animationAction = animationSet.actions[animationName];
+	          var newSteps = [];
+	          var _iteratorNormalCompletion = true;
+	          var _didIteratorError = false;
+	          var _iteratorError = undefined;
+
+	          try {
+	            for (var _iterator = animationAction.steps[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+	              var step = _step.value;
+
+	              for (var i = 0; i < step.duration; i++) {
+	                newSteps.push(step);
+	              }
+	            }
+	          } catch (err) {
+	            _didIteratorError = true;
+	            _iteratorError = err;
+	          } finally {
+	            try {
+	              if (!_iteratorNormalCompletion && _iterator.return) {
+	                _iterator.return();
+	              }
+	            } finally {
+	              if (_didIteratorError) {
+	                throw _iteratorError;
+	              }
+	            }
+	          }
+
+	          animationAction.steps = newSteps;
+	        }
+	      }
 	      //--------------------------------
 
 	      //Rooms
@@ -2550,7 +2587,8 @@
 	      var avo = this.avo;
 
 	      if (avo.pointer.state === AVO.INPUT_ACTIVE || avo.keys[AVO.KEY_CODES.UP].state === AVO.INPUT_ACTIVE || avo.keys[AVO.KEY_CODES.DOWN].state === AVO.INPUT_ACTIVE || avo.keys[AVO.KEY_CODES.LEFT].state === AVO.INPUT_ACTIVE || avo.keys[AVO.KEY_CODES.RIGHT].state === AVO.INPUT_ACTIVE || avo.keys[AVO.KEY_CODES.SPACE].state === AVO.INPUT_ACTIVE || avo.keys[AVO.KEY_CODES.ENTER].state === AVO.INPUT_ACTIVE) {
-	        avo.changeState(AVO.STATE_COMIC, this.playIntroComic);
+	        //avo.changeState(AVO.STATE_COMIC, this.playIntroComic);
+	        avo.changeState(AVO.STATE_ACTION, this.startGame);
 	      }
 	    }
 	  }, {
@@ -2566,10 +2604,48 @@
 	    }
 	  }, {
 	    key: "startGame",
-	    value: function startGame() {}
+	    value: function startGame() {
+	      var avo = this.avo;
+
+	      //Initialise Player ACtor
+	      //Don't use avo.playerActor to avoid standard Action Adventure controls.
+	      avo.refs.player = new _entities.Actor("PLAYER", 8 * 32, 8 * 32, 32, AVO.SHAPE_CIRCLE);
+	      avo.refs.player.spritesheet = avo.assets.images.actor;
+	      avo.refs.player.animationSet = avo.animationSets.actor;
+	      avo.refs.player.attributes[AVO.ATTR.SPEED] = 4;
+	      avo.refs.player.rotation = AVO.ROTATION_SOUTH;
+	      avo.refs.player.playAnimation(AVO.ACTION.MOVING);
+	      avo.actors.push(avo.refs.player);
+
+	      avo.data = {
+	        playerDestination: null
+	      };
+
+	      avo.camera.targetActor = avo.refs.playerActor;
+	    }
 	  }, {
 	    key: "run_action",
-	    value: function run_action() {}
+	    value: function run_action() {
+	      var avo = this.avo;
+
+	      if (avo.pointer.state === AVO.INPUT_ACTIVE) {
+	        avo.data.playerDestination = {
+	          x: avo.pointer.now.x,
+	          y: avo.pointer.now.y
+	        };
+	      }
+
+	      if (avo.data.playerDestination) {
+	        var player = avo.refs.player;
+	        var distY = avo.data.playerDestination.y - player.y;
+	        var distX = avo.data.playerDestination.x - player.x;
+	        var rotation = Math.atan2(distY, distX);
+	        var dist = Math.sqrt(distX * distX + distY * distY);
+	        player.rotation = rotation;
+	        player.x += Math.cos(rotation) * Math.min(dist, player.attributes[AVO.ATTR.SPEED]);
+	        player.y += Math.sin(rotation) * Math.min(dist, player.attributes[AVO.ATTR.SPEED]);
+	      }
+	    }
 	  }]);
 
 	  return CNY2018;
