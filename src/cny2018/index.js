@@ -125,10 +125,13 @@ export class CNY2018 extends Story {
     
     //Initialise Player ACtor
     //Don't use avo.playerActor to avoid standard Action Adventure controls.
-    avo.refs.player = new Actor("PLAYER", 8 * 32, 8 * 32, 32, AVO.SHAPE_CIRCLE);
+    avo.refs.player = new Actor("PLAYER", avo.canvasWidth / 2, avo.canvasHeight / 2, 32, AVO.SHAPE_CIRCLE);
     avo.refs.player.spritesheet = avo.assets.images.actor;
     avo.refs.player.animationSet = avo.animationSets.actor;
-    avo.refs.player.attributes[AVO.ATTR.SPEED] = 4;
+    //avo.refs.player.attributes.speed = 0;
+    avo.refs.player.attributes.acceleration = 2;
+    avo.refs.player.attributes.velocityX = 0;
+    avo.refs.player.attributes.velocityY = 0;
     avo.refs.player.rotation = AVO.ROTATION_SOUTH;
     avo.refs.player.playAnimation(AVO.ACTION.MOVING);
     avo.actors.push(avo.refs.player);
@@ -137,29 +140,54 @@ export class CNY2018 extends Story {
       playerDestination: null,
     };
     
-    avo.camera.targetActor = avo.refs.playerActor;
+    //avo.camera.targetActor = avo.refs.playerActor;
   }
   
   run_action() {
     const avo = this.avo;
+    const player = avo.refs.player;
     
+    //Where is the player going?
+    //--------------------------------
     if (avo.pointer.state === AVO.INPUT_ACTIVE) {
       avo.data.playerDestination = {
         x: avo.pointer.now.x,
         y: avo.pointer.now.y,
       };
     }
+    //--------------------------------
     
+    //If the player has a destination, accelerate towards it
+    //--------------------------------
+    const MIN_DIST = 8;
+    const DECELERATION = 0.95;
     if (avo.data.playerDestination) {
-      const player = avo.refs.player;
       const distY = avo.data.playerDestination.y - player.y;
       const distX = avo.data.playerDestination.x - player.x;
       const rotation = Math.atan2(distY, distX);
-      const dist = Math.sqrt(distX * distX + distY * distY);
-      player.rotation = rotation;
-      player.x += Math.cos(rotation) * Math.min(dist, player.attributes[AVO.ATTR.SPEED]);
-      player.y += Math.sin(rotation) * Math.min(dist, player.attributes[AVO.ATTR.SPEED]);
       
+      //Make player move (accelerate) in a certain direction.
+      player.rotation = rotation;
+      let newVelocityX = player.attributes.velocityX + Math.cos(rotation) * player.attributes.acceleration;
+      let newVelocityY = player.attributes.velocityY + Math.sin(rotation) * player.attributes.acceleration;
+      const newSpeed = newVelocityX * newVelocityX + newVelocityY * newVelocityY;
+      player.attributes.velocityX = newVelocityX;
+      player.attributes.velocityY = newVelocityY;
+    } else {
+      //player.attributes.velocityX *= DECELERATION;
+      //player.attributes.velocityY *= DECELERATION;
     }
+    //--------------------------------
+    
+    //Apply physics.
+    //--------------------------------    
+    avo.actors.map((actor) => {
+      actor.x += actor.attributes.velocityX;
+      actor.y += actor.attributes.velocityY;
+      player.attributes.velocityX *= DECELERATION;
+      player.attributes.velocityY *= DECELERATION;
+    });
+    //--------------------------------
+    
   }
 }
