@@ -337,7 +337,7 @@ export class AvO {  //Naming note: small 'v' between capital 'A' and 'O'.
         
     //Physics
     //--------------------------------
-    this.physics();
+    //CNY2018 - REMOVED this.physics();
     //--------------------------------
     
     //Cleanup Zones
