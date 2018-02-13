@@ -532,6 +532,11 @@
 
 	        //Physics
 	        //--------------------------------
+	        //CNY2018 - REMOVED this.physics();
+	        //--------------------------------
+
+	        //Cleanup Zones
+	        //--------------------------------
 	      } catch (err) {
 	        _didIteratorError2 = true;
 	        _iteratorError2 = err;
@@ -547,11 +552,6 @@
 	        }
 	      }
 
-	      this.physics();
-	      //--------------------------------
-
-	      //Cleanup Zones
-	      //--------------------------------
 	      for (var i = this.zones.length - 1; i >= 0; i--) {
 	        var zone = this.zones[i];
 	        if (!zone.hasInfiniteDuration()) {
@@ -2493,10 +2493,16 @@
 	    _this.init = _this.init.bind(_this);
 	    _this.run_start = _this.run_start.bind(_this);
 	    _this.run_action = _this.run_action.bind(_this);
+	    _this.prePaint = _this.prePaint.bind(_this);
+	    _this.postPaint = _this.postPaint.bind(_this);
 
 	    _this.playIntroComic = _this.playIntroComic.bind(_this);
 	    _this.finishIntroComic = _this.finishIntroComic.bind(_this);
 	    _this.startGame = _this.startGame.bind(_this);
+
+	    _this.throwBall = _this.throwBall.bind(_this);
+
+	    _this.OUTER_BOUNDARY_BUFFER = 64; //The distance beyond the visible canvas where non-player objects can still exist.
 	    return _this;
 	  }
 
@@ -2507,12 +2513,14 @@
 
 	      //Config
 	      //--------------------------------
+	      avo.config.skipStandardRun = true;
 	      avo.config.debugMode = true;
 	      //--------------------------------
 
 	      //Images
 	      //--------------------------------
 	      avo.assets.images.actor = new _utility.ImageAsset("assets/cny2018/actor.png");
+	      avo.assets.images.ball = new _utility.ImageAsset("assets/cny2018/ball.png");
 	      avo.assets.images.comicIntro1 = new _utility.ImageAsset("assets/cny2018/comic-intro-1.png");
 	      //--------------------------------
 
@@ -2534,6 +2542,19 @@
 	            moving: {
 	              loop: true,
 	              steps: [{ row: 1, duration: STEPS_PER_SECOND }, { row: 2, duration: STEPS_PER_SECOND * 2 }, { row: 1, duration: STEPS_PER_SECOND }, { row: 3, duration: STEPS_PER_SECOND * 2 }]
+	            }
+	          }
+	        },
+	        ball: {
+	          rule: AVO.ANIMATION_RULE_BASIC,
+	          tileWidth: 32,
+	          tileHeight: 32,
+	          tileOffsetX: 0,
+	          tileOffsetY: 0,
+	          actions: {
+	            idle: {
+	              loop: true,
+	              steps: [{ row: 0, duration: 1 }]
 	            }
 	          }
 	        }
@@ -2579,6 +2600,7 @@
 
 	      //Rooms
 	      //--------------------------------
+
 	      //--------------------------------
 	    }
 	  }, {
@@ -2612,16 +2634,18 @@
 	      avo.refs.player = new _entities.Actor("PLAYER", avo.canvasWidth / 2, avo.canvasHeight / 2, 32, AVO.SHAPE_CIRCLE);
 	      avo.refs.player.spritesheet = avo.assets.images.actor;
 	      avo.refs.player.animationSet = avo.animationSets.actor;
+	      avo.refs.player.playAnimation(AVO.ACTION.MOVING);
 	      //avo.refs.player.attributes.speed = 0;
 	      avo.refs.player.attributes.acceleration = 2;
 	      avo.refs.player.attributes.velocityX = 0;
 	      avo.refs.player.attributes.velocityY = 0;
 	      avo.refs.player.rotation = AVO.ROTATION_SOUTH;
-	      avo.refs.player.playAnimation(AVO.ACTION.MOVING);
 	      avo.actors.push(avo.refs.player);
 
 	      avo.data = {
-	        playerDestination: null
+	        playerDestination: null,
+	        ticks: 0,
+	        seconds: 0
 	      };
 
 	      //avo.camera.targetActor = avo.refs.playerActor;
@@ -2631,6 +2655,26 @@
 	    value: function run_action() {
 	      var avo = this.avo;
 	      var player = avo.refs.player;
+
+	      //Tick tock!
+	      //--------------------------------
+	      var MAX_ACTORS = 10;
+	      avo.data.ticks++;
+	      if (avo.data.ticks >= AVO.FRAMES_PER_SECOND) {
+	        avo.data.ticks -= AVO.FRAMES_PER_SECOND;
+	        avo.data.seconds++;
+
+	        if (avo.actors.length < MAX_ACTORS) {
+	          var r = Math.random();
+
+	          if (r < 0.9) {
+	            console.log('RED');
+	            this.throwBall("red");
+	            console.log('yyy', avo.actors[1], avo.actors[1].x, avo.actors[1].y);
+	          }
+	        }
+	      }
+	      //--------------------------------
 
 	      //Where is the player going?
 	      //--------------------------------
@@ -2658,9 +2702,10 @@
 	        var newSpeed = newVelocityX * newVelocityX + newVelocityY * newVelocityY;
 	        player.attributes.velocityX = newVelocityX;
 	        player.attributes.velocityY = newVelocityY;
-	      } else {}
-	      //player.attributes.velocityX *= DECELERATION;
-	      //player.attributes.velocityY *= DECELERATION;
+	      }
+	      //--------------------------------
+
+	      //--------------------------------
 
 	      //--------------------------------
 
@@ -2669,10 +2714,81 @@
 	      avo.actors.map(function (actor) {
 	        actor.x += actor.attributes.velocityX;
 	        actor.y += actor.attributes.velocityY;
-	        player.attributes.velocityX *= DECELERATION;
-	        player.attributes.velocityY *= DECELERATION;
 	      });
+
+	      //OK, slow down now, player.
+	      player.attributes.velocityX *= DECELERATION;
+	      player.attributes.velocityY *= DECELERATION;
 	      //--------------------------------
+	    }
+	  }, {
+	    key: "throwBall",
+	    value: function throwBall() {
+	      var colour = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "red";
+
+	      var avo = this.avo;
+
+	      console.log('!');
+	      var ball = null;
+	      if (colour === "red") {
+	        ball = new _entities.Actor("RED_BALL", avo.canvasWidth / 2, avo.canvasHeight / 2, 32, AVO.SHAPE_CIRCLE);
+	        ball.spritesheet = avo.assets.images.ball;
+	        ball.animationSet = avo.animationSets.ball;
+	        ball.playAnimation("idle");
+	        ball.attributes = {
+	          velocityX: 0,
+	          velocityY: 0
+	        };
+	      } else {
+	        return;
+	      }
+
+	      var dir = Math.floor(Math.random() * 4);
+
+	      switch (dir) {
+	        case 0: //From West
+	        case 1:
+	        case 2:
+	        case 3:
+	          ball.x = 0 - this.OUTER_BOUNDARY_BUFFER;
+	          ball.y = Math.random() * avo.canvasHeight;
+	          break;
+	        default:
+	          return;
+	      }
+
+	      var destX = avo.canvasWidth * (0.25 + Math.random() * 0.5); //Aim the ball for somewhere near the middle of the canvas.
+	      var destY = avo.canvasHeight * (0.25 + Math.random() * 0.5);
+	      var speed = Math.random() * 8 + 4; //ARBITRARY
+	      var rotation = Math.atan2(destY - ball.y, destX - ball.x);
+
+	      console.log('&&&', destX, destY, ball.x, ball.y, rotation, speed);
+
+	      ball.rotation = rotation;
+	      ball.attributes.velocityX = Math.cos(rotation) * speed;
+	      ball.attributes.velocityY = Math.sin(rotation) * speed;
+
+	      console.log('xxx', ball, ball.x, ball.y);
+	      avo.actors.push(ball);
+	    }
+	  }, {
+	    key: "prePaint",
+	    value: function prePaint() {}
+	  }, {
+	    key: "postPaint",
+	    value: function postPaint() {
+	      var avo = this.avo;
+
+	      avo.context2d.font = AVO.DEFAULT_FONT;
+	      avo.context2d.textAlign = "center";
+	      avo.context2d.textBaseline = "middle";
+	      avo.context2d.fillStyle = "#fff";
+	      avo.context2d.fillText("Actors: " + avo.actors.length, avo.canvasWidth / 2, avo.canvasHeight - 64);
+	      if (avo.actors.length >= 2) {
+	        avo.context2d.fillText("Ball: " + avo.actors[1].x + "," + avo.actors[1].y, avo.canvasWidth / 2, avo.canvasHeight - 128);
+	        console.log('zzz', avo.actors[1], avo.actors[1].x, avo.actors[1].y);
+	        //clearInterval(avo.runCycle);
+	      }
 	    }
 	  }]);
 
