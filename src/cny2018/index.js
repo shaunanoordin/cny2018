@@ -42,6 +42,16 @@ export class CNY2018 extends Story {
     avo.config.debugMode = true;
     //--------------------------------
     
+    //Data stuff
+    //--------------------------------
+    avo.data = {
+      playerDestination: null,
+      ticks: 0,
+      seconds: 0,
+      score: 0,
+    };
+    //--------------------------------
+    
     //Images
     //--------------------------------
     avo.assets.images.actor = new ImageAsset("assets/cny2018/actor.png");
@@ -163,12 +173,6 @@ export class CNY2018 extends Story {
     avo.refs.player.rotation = AVO.ROTATION_SOUTH;
     avo.actors.push(avo.refs.player);
     
-    avo.data = {
-      playerDestination: null,
-      ticks: 0,
-      seconds: 0,
-    };
-    
     //avo.camera.targetActor = avo.refs.playerActor;
   }
   
@@ -223,10 +227,6 @@ export class CNY2018 extends Story {
     }
     //--------------------------------
     
-    //--------------------------------
-    
-    //--------------------------------
-    
     //Apply physics.
     //--------------------------------    
     avo.actors.map((actor) => {
@@ -237,6 +237,21 @@ export class CNY2018 extends Story {
     //OK, slow down now, player.
     player.attributes.velocityX *= DECELERATION;
     player.attributes.velocityY *= DECELERATION;
+    //--------------------------------
+    
+    //Scoring
+    //--------------------------------
+    avo.actors = avo.actors.filter((actor) => {
+      if (actor === avo.refs.player) return true;
+      
+      if (Physics.checkCollision(avo.refs.player, actor)) {        
+        if (actor.name === "RED_BALL") { avo.data.score++; }
+        
+        return false;  //Remove the ball from existence.
+      }
+      
+      return true;
+    });
     //--------------------------------
     
     //Cleanup
@@ -311,11 +326,13 @@ export class CNY2018 extends Story {
   
   postPaint() {
     const avo = this.avo;
-    
-    avo.context2d.font = AVO.DEFAULT_FONT;
-    avo.context2d.textAlign = "center";
-    avo.context2d.textBaseline = "middle";
-    avo.context2d.fillStyle = "#fff";
-    avo.context2d.fillText("Actors: " + avo.actors.length, avo.canvasWidth / 2, avo.canvasHeight - 64);
+        
+    if (avo.state === AVO.STATE_ACTION) {
+      avo.context2d.font = AVO.DEFAULT_FONT;
+      avo.context2d.textAlign = "center";
+      avo.context2d.textBaseline = "middle";
+      avo.context2d.fillStyle = "#fff";
+      avo.context2d.fillText("Score: " + avo.data.score, avo.canvasWidth / 2, avo.canvasHeight - 64);
+    }
   }
 }
