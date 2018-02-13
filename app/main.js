@@ -2656,6 +2656,8 @@
 	  }, {
 	    key: "run_action",
 	    value: function run_action() {
+	      var _this2 = this;
+
 	      var avo = this.avo;
 	      var player = avo.refs.player;
 
@@ -2721,6 +2723,18 @@
 	      player.attributes.velocityX *= DECELERATION;
 	      player.attributes.velocityY *= DECELERATION;
 	      //--------------------------------
+
+	      //Cleanup
+	      //--------------------------------
+	      //Remove all non-player objects that go beyond the canvas.
+	      avo.actors = avo.actors.filter(function (actor) {
+	        if (actor === avo.refs.player) return true;
+	        var outerLimit = _this2.OUTER_BOUNDARY_BUFFER * 2;
+
+	        //console.log(actor.x, avo.canvasWidth, outerLimit);
+	        return actor.x >= 0 - outerLimit && actor.x <= avo.canvasWidth + outerLimit && actor.y >= 0 - outerLimit && actor.y <= avo.canvasHeight + outerLimit;
+	      });
+	      //--------------------------------
 	    }
 	  }, {
 	    key: "throwBall",
@@ -2746,12 +2760,25 @@
 	      var dir = Math.floor(Math.random() * 4);
 
 	      switch (dir) {
-	        case 0: //From West
+	        case 0:
+	          //From East
+	          ball.x = avo.canvasWidth + this.OUTER_BOUNDARY_BUFFER;
+	          ball.y = Math.random() * avo.canvasHeight;
+	          break;
 	        case 1:
+	          //From South
+	          ball.x = Math.random() * avo.canvasWidth;
+	          ball.y = avo.canvasHeight + this.OUTER_BOUNDARY_BUFFER;
+	          break;
 	        case 2:
-	        case 3:
+	          //From West
 	          ball.x = 0 - this.OUTER_BOUNDARY_BUFFER;
 	          ball.y = Math.random() * avo.canvasHeight;
+	          break;
+	        case 3:
+	          //From North
+	          ball.x = Math.random() * avo.canvasWidth;
+	          ball.y = 0 - this.OUTER_BOUNDARY_BUFFER;
 	          break;
 	        default:
 	          return;

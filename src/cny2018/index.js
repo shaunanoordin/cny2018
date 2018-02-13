@@ -238,6 +238,23 @@ export class CNY2018 extends Story {
     player.attributes.velocityX *= DECELERATION;
     player.attributes.velocityY *= DECELERATION;
     //--------------------------------
+    
+    //Cleanup
+    //--------------------------------
+    //Remove all non-player objects that go beyond the canvas.
+    avo.actors = avo.actors.filter((actor) => {
+      if (actor === avo.refs.player) return true;
+      const outerLimit = this.OUTER_BOUNDARY_BUFFER * 2;
+      
+      //console.log(actor.x, avo.canvasWidth, outerLimit);
+      return (
+        actor.x >= (0 - outerLimit) &&
+        actor.x <= (avo.canvasWidth + outerLimit) &&
+        actor.y >= (0 - outerLimit) &&
+        actor.y <= (avo.canvasHeight + outerLimit)
+      );
+    });
+    //--------------------------------
   }
   
   throwBall(colour = "red") {
@@ -258,12 +275,21 @@ export class CNY2018 extends Story {
     const dir = Math.floor(Math.random() * 4);
     
     switch (dir) {
-      case 0:  //From West
-      case 1:
-      case 2:
-      case 3:
+      case 0:  //From East
+        ball.x = avo.canvasWidth + this.OUTER_BOUNDARY_BUFFER;
+        ball.y = Math.random() * avo.canvasHeight;
+        break;
+      case 1:  //From South
+        ball.x = Math.random() * avo.canvasWidth;
+        ball.y = avo.canvasHeight + this.OUTER_BOUNDARY_BUFFER;
+        break;
+      case 2:  //From West
         ball.x = 0 - this.OUTER_BOUNDARY_BUFFER;
         ball.y = Math.random() * avo.canvasHeight;
+        break;
+      case 3:  //From North
+        ball.x = Math.random() * avo.canvasWidth;
+        ball.y = 0 - this.OUTER_BOUNDARY_BUFFER;
         break;
       default:
         return;
