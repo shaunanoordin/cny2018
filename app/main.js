@@ -2554,7 +2554,7 @@
 	          actions: {
 	            idle: {
 	              loop: true,
-	              steps: [{ row: 0, duration: 1 }]
+	              steps: [{ col: 0, row: 0, duration: 1 }]
 	            }
 	          }
 	        }
@@ -2596,6 +2596,8 @@
 	          animationAction.steps = newSteps;
 	        }
 	      }
+
+	      console.log(avo.animationSets);
 	      //--------------------------------
 
 	      //Rooms
@@ -2635,6 +2637,7 @@
 	      avo.refs.player.spritesheet = avo.assets.images.actor;
 	      avo.refs.player.animationSet = avo.animationSets.actor;
 	      avo.refs.player.playAnimation(AVO.ACTION.MOVING);
+
 	      //avo.refs.player.attributes.speed = 0;
 	      avo.refs.player.attributes.acceleration = 2;
 	      avo.refs.player.attributes.velocityX = 0;
@@ -2668,9 +2671,7 @@
 	          var r = Math.random();
 
 	          if (r < 0.9) {
-	            console.log('RED');
 	            this.throwBall("red");
-	            console.log('yyy', avo.actors[1], avo.actors[1].x, avo.actors[1].y);
 	          }
 	        }
 	      }
@@ -2728,7 +2729,6 @@
 
 	      var avo = this.avo;
 
-	      console.log('!');
 	      var ball = null;
 	      if (colour === "red") {
 	        ball = new _entities.Actor("RED_BALL", avo.canvasWidth / 2, avo.canvasHeight / 2, 32, AVO.SHAPE_CIRCLE);
@@ -2762,13 +2762,10 @@
 	      var speed = Math.random() * 8 + 4; //ARBITRARY
 	      var rotation = Math.atan2(destY - ball.y, destX - ball.x);
 
-	      console.log('&&&', destX, destY, ball.x, ball.y, rotation, speed);
-
 	      ball.rotation = rotation;
 	      ball.attributes.velocityX = Math.cos(rotation) * speed;
 	      ball.attributes.velocityY = Math.sin(rotation) * speed;
 
-	      console.log('xxx', ball, ball.x, ball.y);
 	      avo.actors.push(ball);
 	    }
 	  }, {
@@ -2784,11 +2781,6 @@
 	      avo.context2d.textBaseline = "middle";
 	      avo.context2d.fillStyle = "#fff";
 	      avo.context2d.fillText("Actors: " + avo.actors.length, avo.canvasWidth / 2, avo.canvasHeight - 64);
-	      if (avo.actors.length >= 2) {
-	        avo.context2d.fillText("Ball: " + avo.actors[1].x + "," + avo.actors[1].y, avo.canvasWidth / 2, avo.canvasHeight - 128);
-	        console.log('zzz', avo.actors[1], avo.actors[1].x, avo.actors[1].y);
-	        //clearInterval(avo.runCycle);
-	      }
 	    }
 	  }]);
 
