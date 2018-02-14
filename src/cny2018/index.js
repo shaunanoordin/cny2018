@@ -26,6 +26,7 @@ export class CNY2018 extends Story {
     
     this.playIntroComic = this.playIntroComic.bind(this);
     this.finishIntroComic = this.finishIntroComic.bind(this);
+    this.playEndingComic = this.playEndingComic.bind(this);
     this.startGame = this.startGame.bind(this);
     
     this.throwBall = this.throwBall.bind(this);
@@ -39,7 +40,7 @@ export class CNY2018 extends Story {
     //Config
     //--------------------------------
     avo.config.skipStandardRun = true;
-    avo.config.debugMode = true;
+    avo.config.debugMode = false;
     //--------------------------------
     
     //Data stuff
@@ -49,6 +50,11 @@ export class CNY2018 extends Story {
       ticks: 0,
       seconds: 0,
       score: 0,
+      maxActors: 16,
+      secondsToLevel1: 0,
+      secondsToLevel2: 20,
+      secondsToLevel3: 40,
+      secondsToEnd: 60,
     };
     //--------------------------------
     
@@ -116,35 +122,22 @@ export class CNY2018 extends Story {
         animationAction.steps = newSteps;
       }
     }
-    
-    console.log(avo.animationSets);
-    //--------------------------------
-    
-    //Rooms
-    //--------------------------------
-    
     //--------------------------------
   }
   
   run_start() {
     const avo = this.avo;
     
-    if (avo.pointer.state === AVO.INPUT_ACTIVE || 
-        avo.keys[AVO.KEY_CODES.UP].state === AVO.INPUT_ACTIVE ||
-        avo.keys[AVO.KEY_CODES.DOWN].state === AVO.INPUT_ACTIVE ||
-        avo.keys[AVO.KEY_CODES.LEFT].state === AVO.INPUT_ACTIVE ||
-        avo.keys[AVO.KEY_CODES.RIGHT].state === AVO.INPUT_ACTIVE ||
-        avo.keys[AVO.KEY_CODES.SPACE].state === AVO.INPUT_ACTIVE ||
-        avo.keys[AVO.KEY_CODES.ENTER].state === AVO.INPUT_ACTIVE) {
-      //avo.changeState(AVO.STATE_COMIC, this.playIntroComic);
-      avo.changeState(AVO.STATE_ACTION, this.startGame);
-    }
+    //if (avo.pointer.state === AVO.INPUT_ACTIVE) {
+    avo.changeState(AVO.STATE_COMIC, this.playIntroComic);
+    //}
+    //avo.changeState(AVO.STATE_ACTION, this.startGame);
   }
   
   playIntroComic() {
     const avo = this.avo;
     avo.comicStrip = new ComicStrip(
-      "comic_1",
+      "comic_intro",
       [ avo.assets.images.comicIntro1,
         //avo.assets.images.comicIntro2,
       ],
@@ -156,9 +149,28 @@ export class CNY2018 extends Story {
     this.avo.changeState(AVO.STATE_ACTION, this.startGame);
   }
   
+  playEndingComic() {
+    const avo = this.avo;
+    avo.comicStrip = new ComicStrip(
+      "comic_ending",
+      [ avo.assets.images.comicIntro1,
+        //avo.assets.images.comicIntro2,
+      ],
+      this.playIntroComic
+    );
+  }
+  
   startGame() {
     const avo = this.avo;
     
+    //Reset
+    avo.actors = [];
+    avo.refs = {};
+    avo.data.playerDestination = null;
+    avo.data.ticks = 0;
+    avo.data.seconds = 0;
+    avo.data.score = 0;
+      
     //Initialise Player ACtor
     //Don't use avo.playerActor to avoid standard Action Adventure controls.
     avo.refs.player = new Actor("PLAYER", avo.canvasWidth / 2, avo.canvasHeight / 2, 32, AVO.SHAPE_CIRCLE);
@@ -187,12 +199,26 @@ export class CNY2018 extends Story {
     if (avo.data.ticks >= AVO.FRAMES_PER_SECOND) {
       avo.data.ticks -= AVO.FRAMES_PER_SECOND;
       avo.data.seconds++;
+      const r = Math.random();
       
-      if (avo.actors.length < MAX_ACTORS) {
-        const r = Math.random();
-        
-        if (r < 0.9) {
-          this.throwBall("red");
+      if (avo.data.seconds >= avo.data.secondsToEnd) {
+        //FINISH
+        avo.changeState(AVO.STATE_COMIC, this.playEndingComic);
+      } else if (avo.data.seconds >= avo.data.secondsToLevel3) {
+        //LEVEL 3: Chinese gods help you!
+        if (avo.actors.length < MAX_ACTORS && r < 0.9) {
+          this.throwBall("red", 12 + Math.random() * 8);
+        }
+      } else if (avo.data.seconds >= avo.data.secondsToLevel2) {
+        //LEVEL 2: Challenge ramp
+        if (avo.actors.length < MAX_ACTORS && r < 0.7) {
+          this.throwBall("red", 10 + Math.random() * 4);
+        }
+      } else if (avo.data.seconds >= avo.data.secondsToLevel1) {
+        //LEVEL 1: Easy intro
+        if (avo.data.seconds === 1 || // always throw one ball at the start
+          (avo.actors.length < MAX_ACTORS && r < 0.5)) {
+          this.throwBall("red", 8);
         }
       }
     }
@@ -242,14 +268,11 @@ export class CNY2018 extends Story {
     //Scoring
     //--------------------------------
     avo.actors = avo.actors.filter((actor) => {
-      if (actor === avo.refs.player) return true;
-      
+      if (actor === avo.refs.player) return true;  //Ignore if a player collides with... herself.
       if (Physics.checkCollision(avo.refs.player, actor)) {        
         if (actor.name === "RED_BALL") { avo.data.score++; }
-        
         return false;  //Remove the ball from existence.
-      }
-      
+      }      
       return true;
     });
     //--------------------------------
@@ -272,7 +295,7 @@ export class CNY2018 extends Story {
     //--------------------------------
   }
   
-  throwBall(colour = "red") {
+  throwBall(colour = "red", speed = 8) {
     const avo = this.avo;
     
     let ball = null;
@@ -312,7 +335,6 @@ export class CNY2018 extends Story {
     
     let destX = avo.canvasWidth * (0.25 + Math.random() * 0.5);  //Aim the ball for somewhere near the middle of the canvas.
     let destY = avo.canvasHeight * (0.25 + Math.random() * 0.5);
-    const speed = Math.random() * 8 + 4;  //ARBITRARY
     const rotation = Math.atan2(destY - ball.y, destX - ball.x);
     
     ball.rotation = rotation;
@@ -328,11 +350,20 @@ export class CNY2018 extends Story {
     const avo = this.avo;
         
     if (avo.state === AVO.STATE_ACTION) {
+      //UI overlay: score and time!
       avo.context2d.font = AVO.DEFAULT_FONT;
       avo.context2d.textAlign = "center";
       avo.context2d.textBaseline = "middle";
       avo.context2d.fillStyle = "#fff";
       avo.context2d.fillText("Score: " + avo.data.score, avo.canvasWidth / 2, avo.canvasHeight - 64);
+      avo.context2d.fillText("Time left: " + (avo.data.secondsToEnd - avo.data.seconds), avo.canvasWidth / 2, 64)
+    } else if (avo.state === AVO.STATE_COMIC && avo.comicStrip.name === "comic_ending" && avo.comicStrip.state === AVO.COMIC_STRIP_STATE_IDLE) {
+      //UI addition: final score!
+      avo.context2d.font = AVO.DEFAULT_FONT;
+      avo.context2d.textAlign = "center";
+      avo.context2d.textBaseline = "middle";
+      avo.context2d.fillStyle = "#c33";
+      avo.context2d.fillText("Happy Chinese New Year! " + avo.data.score, avo.canvasWidth / 2, avo.canvasHeight - 64);
     }
   }
 }

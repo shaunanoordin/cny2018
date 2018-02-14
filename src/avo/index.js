@@ -8,7 +8,7 @@ AvO Adventure Game Engine
 
 import * as AVO from "./constants.js";  //Naming note: all caps.
 import { Story } from "./story.js";
-import { Physics } from "../avo/physics.js";
+import { Physics } from "./physics.js";
 import { Utility } from "./utility.js";
 import { StandardActions } from "./standard-actions.js";
 
