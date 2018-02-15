@@ -2538,6 +2538,7 @@
 	      //Images
 	      //--------------------------------
 	      avo.assets.images.actor = new _utility.ImageAsset("assets/cny2018/actor.png");
+	      avo.assets.images.dog = new _utility.ImageAsset("assets/cny2018/dog.png");
 	      avo.assets.images.ball = new _utility.ImageAsset("assets/cny2018/ball.png");
 	      avo.assets.images.comicIntro1 = new _utility.ImageAsset("assets/cny2018/comic-intro-1.png");
 	      //--------------------------------
@@ -2560,6 +2561,23 @@
 	            moving: {
 	              loop: true,
 	              steps: [{ row: 1, duration: STEPS_PER_SECOND }, { row: 2, duration: STEPS_PER_SECOND * 2 }, { row: 1, duration: STEPS_PER_SECOND }, { row: 3, duration: STEPS_PER_SECOND * 2 }]
+	            }
+	          }
+	        },
+	        dog: {
+	          rule: AVO.ANIMATION_RULE_DIRECTIONAL,
+	          tileWidth: 64,
+	          tileHeight: 64,
+	          tileOffsetX: 0,
+	          tileOffsetY: -24, //-16,
+	          actions: {
+	            idle: {
+	              loop: true,
+	              steps: [{ row: 0, duration: 1 }]
+	            },
+	            moving: {
+	              loop: true,
+	              steps: [{ row: 0, duration: STEPS_PER_SECOND * 2 }, { row: 1, duration: STEPS_PER_SECOND * 2 }]
 	            }
 	          }
 	        },
@@ -2660,8 +2678,8 @@
 	      //Initialise Player ACtor
 	      //Don't use avo.playerActor to avoid standard Action Adventure controls.
 	      avo.refs.player = new _entities.Actor("PLAYER", avo.canvasWidth / 2, avo.canvasHeight / 2, 32, AVO.SHAPE_CIRCLE);
-	      avo.refs.player.spritesheet = avo.assets.images.actor;
-	      avo.refs.player.animationSet = avo.animationSets.actor;
+	      avo.refs.player.spritesheet = avo.assets.images.dog;
+	      avo.refs.player.animationSet = avo.animationSets.dog;
 	      avo.refs.player.playAnimation(AVO.ACTION.MOVING);
 
 	      //avo.refs.player.attributes.speed = 0;
