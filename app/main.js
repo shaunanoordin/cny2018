@@ -2498,6 +2498,7 @@
 
 	    _this.playIntroComic = _this.playIntroComic.bind(_this);
 	    _this.finishIntroComic = _this.finishIntroComic.bind(_this);
+	    _this.playEndingComic = _this.playEndingComic.bind(_this);
 	    _this.startGame = _this.startGame.bind(_this);
 
 	    _this.throwBall = _this.throwBall.bind(_this);
@@ -2514,7 +2515,7 @@
 	      //Config
 	      //--------------------------------
 	      avo.config.skipStandardRun = true;
-	      avo.config.debugMode = true;
+	      avo.config.debugMode = false;
 	      //--------------------------------
 
 	      //Data stuff
@@ -2523,8 +2524,15 @@
 	        playerDestination: null,
 	        ticks: 0,
 	        seconds: 0,
-	        score: 0
+	        score: 0,
+	        maxActors: 16,
+	        secondsToLevel1: 0,
+	        secondsToLevel2: 20,
+	        secondsToLevel3: 40,
+	        secondsToEnd: 60,
+	        vfxDuration: 1 * AVO.FRAMES_PER_SECOND
 	      };
+	      avo.vfx = [];
 	      //--------------------------------
 
 	      //Images
@@ -2606,13 +2614,6 @@
 	          animationAction.steps = newSteps;
 	        }
 	      }
-
-	      console.log(avo.animationSets);
-	      //--------------------------------
-
-	      //Rooms
-	      //--------------------------------
-
 	      //--------------------------------
 	    }
 	  }, {
@@ -2620,16 +2621,16 @@
 	    value: function run_start() {
 	      var avo = this.avo;
 
-	      if (avo.pointer.state === AVO.INPUT_ACTIVE || avo.keys[AVO.KEY_CODES.UP].state === AVO.INPUT_ACTIVE || avo.keys[AVO.KEY_CODES.DOWN].state === AVO.INPUT_ACTIVE || avo.keys[AVO.KEY_CODES.LEFT].state === AVO.INPUT_ACTIVE || avo.keys[AVO.KEY_CODES.RIGHT].state === AVO.INPUT_ACTIVE || avo.keys[AVO.KEY_CODES.SPACE].state === AVO.INPUT_ACTIVE || avo.keys[AVO.KEY_CODES.ENTER].state === AVO.INPUT_ACTIVE) {
-	        //avo.changeState(AVO.STATE_COMIC, this.playIntroComic);
-	        avo.changeState(AVO.STATE_ACTION, this.startGame);
-	      }
+	      //if (avo.pointer.state === AVO.INPUT_ACTIVE) {
+	      avo.changeState(AVO.STATE_COMIC, this.playIntroComic);
+	      //}
+	      //avo.changeState(AVO.STATE_ACTION, this.startGame);
 	    }
 	  }, {
 	    key: "playIntroComic",
 	    value: function playIntroComic() {
 	      var avo = this.avo;
-	      avo.comicStrip = new _comicStrip.ComicStrip("comic_1", [avo.assets.images.comicIntro1], this.finishIntroComic);
+	      avo.comicStrip = new _comicStrip.ComicStrip("comic_intro", [avo.assets.images.comicIntro1], this.finishIntroComic);
 	    }
 	  }, {
 	    key: "finishIntroComic",
@@ -2637,9 +2638,24 @@
 	      this.avo.changeState(AVO.STATE_ACTION, this.startGame);
 	    }
 	  }, {
+	    key: "playEndingComic",
+	    value: function playEndingComic() {
+	      var avo = this.avo;
+	      avo.comicStrip = new _comicStrip.ComicStrip("comic_ending", [avo.assets.images.comicIntro1], this.playIntroComic);
+	    }
+	  }, {
 	    key: "startGame",
 	    value: function startGame() {
 	      var avo = this.avo;
+
+	      //Reset
+	      avo.actors = [];
+	      avo.vfx = [];
+	      avo.refs = {};
+	      avo.data.playerDestination = null;
+	      avo.data.ticks = 0;
+	      avo.data.seconds = 0;
+	      avo.data.score = 0;
 
 	      //Initialise Player ACtor
 	      //Don't use avo.playerActor to avoid standard Action Adventure controls.
@@ -2672,12 +2688,26 @@
 	      if (avo.data.ticks >= AVO.FRAMES_PER_SECOND) {
 	        avo.data.ticks -= AVO.FRAMES_PER_SECOND;
 	        avo.data.seconds++;
+	        var r = Math.random();
 
-	        if (avo.actors.length < MAX_ACTORS) {
-	          var r = Math.random();
-
-	          if (r < 0.9) {
-	            this.throwBall("red");
+	        if (avo.data.seconds >= avo.data.secondsToEnd) {
+	          //FINISH
+	          avo.changeState(AVO.STATE_COMIC, this.playEndingComic);
+	        } else if (avo.data.seconds >= avo.data.secondsToLevel3) {
+	          //LEVEL 3: Chinese gods help you!
+	          if (avo.actors.length < MAX_ACTORS && r < 0.9) {
+	            this.throwBall("red", 12 + Math.random() * 8);
+	          }
+	        } else if (avo.data.seconds >= avo.data.secondsToLevel2) {
+	          //LEVEL 2: Challenge ramp
+	          if (avo.actors.length < MAX_ACTORS && r < 0.7) {
+	            this.throwBall("red", 10 + Math.random() * 4);
+	          }
+	        } else if (avo.data.seconds >= avo.data.secondsToLevel1) {
+	          //LEVEL 1: Easy intro
+	          if (avo.data.seconds === 1 || // always throw one ball at the start
+	          avo.actors.length < MAX_ACTORS && r < 0.5) {
+	            this.throwBall("red", 8);
 	          }
 	        }
 	      }
@@ -2727,16 +2757,19 @@
 	      //Scoring
 	      //--------------------------------
 	      avo.actors = avo.actors.filter(function (actor) {
-	        if (actor === avo.refs.player) return true;
-
+	        if (actor === avo.refs.player) return true; //Ignore if a player collides with... herself.
 	        if (_physics.Physics.checkCollision(avo.refs.player, actor)) {
 	          if (actor.name === "RED_BALL") {
 	            avo.data.score++;
+	            avo.vfx.push({
+	              x: actor.x, y: actor.y,
+	              colour: "255, 255, 255",
+	              content: '+1',
+	              duration: avo.data.vfxDuration
+	            });
 	          }
-
 	          return false; //Remove the ball from existence.
 	        }
-
 	        return true;
 	      });
 	      //--------------------------------
@@ -2757,6 +2790,7 @@
 	    key: "throwBall",
 	    value: function throwBall() {
 	      var colour = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "red";
+	      var speed = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 8;
 
 	      var avo = this.avo;
 
@@ -2803,7 +2837,6 @@
 
 	      var destX = avo.canvasWidth * (0.25 + Math.random() * 0.5); //Aim the ball for somewhere near the middle of the canvas.
 	      var destY = avo.canvasHeight * (0.25 + Math.random() * 0.5);
-	      var speed = Math.random() * 8 + 4; //ARBITRARY
 	      var rotation = Math.atan2(destY - ball.y, destX - ball.x);
 
 	      ball.rotation = rotation;
@@ -2821,11 +2854,29 @@
 	      var avo = this.avo;
 
 	      if (avo.state === AVO.STATE_ACTION) {
+	        //UI overlay: score and time!
+	        avo.context2d.font = AVO.DEFAULT_FONT;
+	        avo.context2d.textBaseline = "bottom";
+	        avo.context2d.fillStyle = "#fff";
+	        avo.context2d.textAlign = "right";
+	        avo.context2d.fillText(avo.data.score + " balls", avo.canvasWidth - 32, avo.canvasHeight - 32);
+	        avo.context2d.textAlign = "left";
+	        avo.context2d.fillText("Time left: " + (avo.data.secondsToEnd - avo.data.seconds), 32, avo.canvasHeight - 32);
+
+	        //Paint the visual effects
+	        avo.vfx = avo.vfx.filter(function (vfx) {
+	          avo.context2d.fillStyle = "rgba(" + vfx.colour + ", " + (vfx.duration / avo.data.vfxDuration).toFixed(2) + ")";
+	          avo.context2d.fillText(vfx.content, vfx.x, vfx.y);
+	          vfx.duration--;
+	          return vfx.duration > 0;
+	        });
+	      } else if (avo.state === AVO.STATE_COMIC && avo.comicStrip.name === "comic_ending" && avo.comicStrip.state === AVO.COMIC_STRIP_STATE_IDLE) {
+	        //UI addition: final score!
 	        avo.context2d.font = AVO.DEFAULT_FONT;
 	        avo.context2d.textAlign = "center";
 	        avo.context2d.textBaseline = "middle";
-	        avo.context2d.fillStyle = "#fff";
-	        avo.context2d.fillText("Score: " + avo.data.score, avo.canvasWidth / 2, avo.canvasHeight - 64);
+	        avo.context2d.fillStyle = "#c33";
+	        avo.context2d.fillText("Happy Chinese New Year! " + avo.data.score, avo.canvasWidth / 2, avo.canvasHeight - 64);
 	      }
 	    }
 	  }]);
