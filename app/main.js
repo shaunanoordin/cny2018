@@ -2515,6 +2515,7 @@
 	      //Config
 	      //--------------------------------
 	      avo.config.skipStandardRun = true;
+	      avo.config.backgroundColour = "#9a8";
 	      avo.config.debugMode = false;
 	      //--------------------------------
 
@@ -2538,8 +2539,10 @@
 	      //Images
 	      //--------------------------------
 	      avo.assets.images.actor = new _utility.ImageAsset("assets/cny2018/actor.png");
+	      avo.assets.images.dog = new _utility.ImageAsset("assets/cny2018/dog.png");
 	      avo.assets.images.ball = new _utility.ImageAsset("assets/cny2018/ball.png");
 	      avo.assets.images.comicIntro1 = new _utility.ImageAsset("assets/cny2018/comic-intro-1.png");
+	      avo.assets.images.comicEnding1 = new _utility.ImageAsset("assets/cny2018/comic-ending-1.png");
 	      //--------------------------------
 
 	      //Animations
@@ -2560,6 +2563,23 @@
 	            moving: {
 	              loop: true,
 	              steps: [{ row: 1, duration: STEPS_PER_SECOND }, { row: 2, duration: STEPS_PER_SECOND * 2 }, { row: 1, duration: STEPS_PER_SECOND }, { row: 3, duration: STEPS_PER_SECOND * 2 }]
+	            }
+	          }
+	        },
+	        dog: {
+	          rule: AVO.ANIMATION_RULE_DIRECTIONAL,
+	          tileWidth: 64,
+	          tileHeight: 64,
+	          tileOffsetX: 0,
+	          tileOffsetY: -24, //-16,
+	          actions: {
+	            idle: {
+	              loop: true,
+	              steps: [{ row: 0, duration: 1 }]
+	            },
+	            moving: {
+	              loop: true,
+	              steps: [{ row: 0, duration: STEPS_PER_SECOND * 2 }, { row: 1, duration: STEPS_PER_SECOND * 2 }]
 	            }
 	          }
 	        },
@@ -2641,7 +2661,7 @@
 	    key: "playEndingComic",
 	    value: function playEndingComic() {
 	      var avo = this.avo;
-	      avo.comicStrip = new _comicStrip.ComicStrip("comic_ending", [avo.assets.images.comicIntro1], this.playIntroComic);
+	      avo.comicStrip = new _comicStrip.ComicStrip("comic_ending", [avo.assets.images.comicEnding1], this.playIntroComic);
 	    }
 	  }, {
 	    key: "startGame",
@@ -2660,8 +2680,8 @@
 	      //Initialise Player ACtor
 	      //Don't use avo.playerActor to avoid standard Action Adventure controls.
 	      avo.refs.player = new _entities.Actor("PLAYER", avo.canvasWidth / 2, avo.canvasHeight / 2, 32, AVO.SHAPE_CIRCLE);
-	      avo.refs.player.spritesheet = avo.assets.images.actor;
-	      avo.refs.player.animationSet = avo.animationSets.actor;
+	      avo.refs.player.spritesheet = avo.assets.images.dog;
+	      avo.refs.player.animationSet = avo.animationSets.dog;
 	      avo.refs.player.playAnimation(AVO.ACTION.MOVING);
 
 	      //avo.refs.player.attributes.speed = 0;
@@ -2873,10 +2893,15 @@
 	      } else if (avo.state === AVO.STATE_COMIC && avo.comicStrip.name === "comic_ending" && avo.comicStrip.state === AVO.COMIC_STRIP_STATE_IDLE) {
 	        //UI addition: final score!
 	        avo.context2d.font = AVO.DEFAULT_FONT;
-	        avo.context2d.textAlign = "center";
-	        avo.context2d.textBaseline = "middle";
+	        avo.context2d.textAlign = "left";
+	        avo.context2d.textBaseline = "top";
+	        avo.context2d.fillStyle = "#fc3";
+	        avo.context2d.fillText("Your score:", 64, 64);
+	        if (avo.data.score > 2) avo.context2d.fillText("Wow, you've got a lot of balls", 64, 160);
+	        avo.context2d.fillText("HAPPY CHINESE NEW YEAR!", 64, 192);
 	        avo.context2d.fillStyle = "#c33";
-	        avo.context2d.fillText("Happy Chinese New Year! " + avo.data.score, avo.canvasWidth / 2, avo.canvasHeight - 64);
+	        avo.context2d.font = "64px monospace";
+	        avo.context2d.fillText(avo.data.score, 64, 96);
 	      }
 	    }
 	  }]);
