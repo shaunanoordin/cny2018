@@ -2528,9 +2528,12 @@
 	        score: 0,
 	        maxActors: 16,
 	        secondsToLevel1: 0,
-	        secondsToLevel2: 20,
-	        secondsToLevel3: 40,
-	        secondsToEnd: 60,
+	        secondsToLevel2: 15,
+	        secondsToLevel3: 30,
+	        secondsToLevel4: 45,
+	        secondsToLevel5: 60,
+	        secondsToLevel6: 75,
+	        secondsToEnd: 90,
 	        vfxDuration: 1 * AVO.FRAMES_PER_SECOND
 	      };
 	      avo.vfx = [];
@@ -2713,21 +2716,36 @@
 	        if (avo.data.seconds >= avo.data.secondsToEnd) {
 	          //FINISH
 	          avo.changeState(AVO.STATE_COMIC, this.playEndingComic);
-	        } else if (avo.data.seconds >= avo.data.secondsToLevel3) {
-	          //LEVEL 3: Chinese gods help you!
+	        } else if (avo.data.seconds >= avo.data.secondsToLevel6) {
+	          //LEVEL 6: Chinese gods help you!
 	          if (avo.actors.length < MAX_ACTORS && r < 0.9) {
-	            this.throwBall("red", 12 + Math.random() * 8);
+	            this.throwBall("red", 12 + Math.random() * 6);
+	          }
+	        } else if (avo.data.seconds >= avo.data.secondsToLevel5) {
+	          //LEVEL 5: This may get impossible
+	          if (avo.actors.length < MAX_ACTORS && r < 0.9) {
+	            this.throwBall("red", 10 + Math.random() * 4);
+	          }
+	        } else if (avo.data.seconds >= avo.data.secondsToLevel4) {
+	          //LEVEL 4: CHALLENGE ON
+	          if (avo.actors.length < MAX_ACTORS && r < 0.7) {
+	            this.throwBall("red", 8 + Math.random() * 4);
+	          }
+	        } else if (avo.data.seconds >= avo.data.secondsToLevel3) {
+	          //LEVEL 3: Yup, getting a bit harder
+	          if (avo.actors.length < MAX_ACTORS && r < 0.7) {
+	            this.throwBall("red", 6 + Math.random() * 2);
 	          }
 	        } else if (avo.data.seconds >= avo.data.secondsToLevel2) {
-	          //LEVEL 2: Challenge ramp
-	          if (avo.actors.length < MAX_ACTORS && r < 0.7) {
-	            this.throwBall("red", 10 + Math.random() * 4);
+	          //LEVEL 2: Proper gameplay
+	          if (avo.actors.length < MAX_ACTORS && r < 0.5) {
+	            this.throwBall("red", 4 + Math.random() * 2);
 	          }
 	        } else if (avo.data.seconds >= avo.data.secondsToLevel1) {
 	          //LEVEL 1: Easy intro
 	          if (avo.data.seconds === 1 || // always throw one ball at the start
 	          avo.actors.length < MAX_ACTORS && r < 0.5) {
-	            this.throwBall("red", 8);
+	            this.throwBall("red", 4);
 	          }
 	        }
 	      }
