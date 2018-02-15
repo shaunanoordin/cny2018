@@ -55,7 +55,9 @@ export class CNY2018 extends Story {
       secondsToLevel2: 20,
       secondsToLevel3: 40,
       secondsToEnd: 60,
+      vfxDuration: 1 * AVO.FRAMES_PER_SECOND,
     };
+    avo.vfx = [];
     //--------------------------------
     
     //Images
@@ -165,6 +167,7 @@ export class CNY2018 extends Story {
     
     //Reset
     avo.actors = [];
+    avo.vfx = [];
     avo.refs = {};
     avo.data.playerDestination = null;
     avo.data.ticks = 0;
@@ -270,7 +273,15 @@ export class CNY2018 extends Story {
     avo.actors = avo.actors.filter((actor) => {
       if (actor === avo.refs.player) return true;  //Ignore if a player collides with... herself.
       if (Physics.checkCollision(avo.refs.player, actor)) {        
-        if (actor.name === "RED_BALL") { avo.data.score++; }
+        if (actor.name === "RED_BALL") {
+          avo.data.score++;
+          avo.vfx.push({
+            x: actor.x, y: actor.y,
+            colour: "255, 255, 255",
+            content: '+1',
+            duration: avo.data.vfxDuration,
+          });
+        }
         return false;  //Remove the ball from existence.
       }      
       return true;
@@ -352,11 +363,21 @@ export class CNY2018 extends Story {
     if (avo.state === AVO.STATE_ACTION) {
       //UI overlay: score and time!
       avo.context2d.font = AVO.DEFAULT_FONT;
-      avo.context2d.textAlign = "center";
-      avo.context2d.textBaseline = "middle";
+      avo.context2d.textBaseline = "bottom";
       avo.context2d.fillStyle = "#fff";
-      avo.context2d.fillText("Score: " + avo.data.score, avo.canvasWidth / 2, avo.canvasHeight - 64);
-      avo.context2d.fillText("Time left: " + (avo.data.secondsToEnd - avo.data.seconds), avo.canvasWidth / 2, 64)
+      avo.context2d.textAlign = "right";
+      avo.context2d.fillText(avo.data.score + " balls", avo.canvasWidth - 32, avo.canvasHeight - 32);
+      avo.context2d.textAlign = "left";
+      avo.context2d.fillText("Time left: " + (avo.data.secondsToEnd - avo.data.seconds), 32, avo.canvasHeight - 32);
+      
+      //Paint the visual effects
+      avo.vfx = avo.vfx.filter((vfx) => {
+        avo.context2d.fillStyle = "rgba(" + vfx.colour +", " + (vfx.duration / avo.data.vfxDuration).toFixed(2) +")";
+        avo.context2d.fillText(vfx.content, vfx.x, vfx.y);
+        vfx.duration--;
+        return vfx.duration > 0;
+      })
+      
     } else if (avo.state === AVO.STATE_COMIC && avo.comicStrip.name === "comic_ending" && avo.comicStrip.state === AVO.COMIC_STRIP_STATE_IDLE) {
       //UI addition: final score!
       avo.context2d.font = AVO.DEFAULT_FONT;
