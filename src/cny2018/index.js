@@ -402,10 +402,15 @@ export class CNY2018 extends Story {
     } else if (avo.state === AVO.STATE_COMIC && avo.comicStrip.name === "comic_ending" && avo.comicStrip.state === AVO.COMIC_STRIP_STATE_IDLE) {
       //UI addition: final score!
       avo.context2d.font = AVO.DEFAULT_FONT;
-      avo.context2d.textAlign = "center";
-      avo.context2d.textBaseline = "middle";
+      avo.context2d.textAlign = "left";
+      avo.context2d.textBaseline = "top";
+      avo.context2d.fillStyle = "#fc3";
+      avo.context2d.fillText("Your score:", 64, 64);
+      if (avo.data.score > 2) avo.context2d.fillText("Wow, you've got a lot of balls", 64, 160);
+      avo.context2d.fillText("HAPPY CHINESE NEW YEAR!", 64, 192);
       avo.context2d.fillStyle = "#c33";
-      avo.context2d.fillText("Happy Chinese New Year! " + avo.data.score, avo.canvasWidth / 2, avo.canvasHeight - 64);
+      avo.context2d.font = "64px monospace";
+      avo.context2d.fillText(avo.data.score, 64, 96);
     }
   }
 }
