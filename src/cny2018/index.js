@@ -40,6 +40,7 @@ export class CNY2018 extends Story {
     //Config
     //--------------------------------
     avo.config.skipStandardRun = true;
+    avo.config.backgroundColour = "#9a8";
     avo.config.debugMode = false;
     //--------------------------------
     
@@ -65,7 +66,8 @@ export class CNY2018 extends Story {
     avo.assets.images.actor = new ImageAsset("assets/cny2018/actor.png");
     avo.assets.images.dog = new ImageAsset("assets/cny2018/dog.png");
     avo.assets.images.ball = new ImageAsset("assets/cny2018/ball.png");
-    avo.assets.images.comicIntro1 = new ImageAsset("assets/cny2018/comic-intro-1.png")
+    avo.assets.images.comicIntro1 = new ImageAsset("assets/cny2018/comic-intro-1.png");
+    avo.assets.images.comicEnding1 = new ImageAsset("assets/cny2018/comic-ending-1.png");
     //--------------------------------
     
     //Animations
@@ -163,9 +165,7 @@ export class CNY2018 extends Story {
     const avo = this.avo;
     avo.comicStrip = new ComicStrip(
       "comic_intro",
-      [ avo.assets.images.comicIntro1,
-        //avo.assets.images.comicIntro2,
-      ],
+      [ avo.assets.images.comicIntro1 ],
       this.finishIntroComic
     );
   }
@@ -178,9 +178,7 @@ export class CNY2018 extends Story {
     const avo = this.avo;
     avo.comicStrip = new ComicStrip(
       "comic_ending",
-      [ avo.assets.images.comicIntro1,
-        //avo.assets.images.comicIntro2,
-      ],
+      [ avo.assets.images.comicEnding1 ],
       this.playIntroComic
     );
   }

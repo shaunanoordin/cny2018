@@ -2515,6 +2515,7 @@
 	      //Config
 	      //--------------------------------
 	      avo.config.skipStandardRun = true;
+	      avo.config.backgroundColour = "#9a8";
 	      avo.config.debugMode = false;
 	      //--------------------------------
 
@@ -2541,6 +2542,7 @@
 	      avo.assets.images.dog = new _utility.ImageAsset("assets/cny2018/dog.png");
 	      avo.assets.images.ball = new _utility.ImageAsset("assets/cny2018/ball.png");
 	      avo.assets.images.comicIntro1 = new _utility.ImageAsset("assets/cny2018/comic-intro-1.png");
+	      avo.assets.images.comicEnding1 = new _utility.ImageAsset("assets/cny2018/comic-ending-1.png");
 	      //--------------------------------
 
 	      //Animations
@@ -2659,7 +2661,7 @@
 	    key: "playEndingComic",
 	    value: function playEndingComic() {
 	      var avo = this.avo;
-	      avo.comicStrip = new _comicStrip.ComicStrip("comic_ending", [avo.assets.images.comicIntro1], this.playIntroComic);
+	      avo.comicStrip = new _comicStrip.ComicStrip("comic_ending", [avo.assets.images.comicEnding1], this.playIntroComic);
 	    }
 	  }, {
 	    key: "startGame",
